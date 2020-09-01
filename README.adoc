@@ -1,0 +1,99 @@
+= foo-dogsquared's GuixSD config
+
+This is my config on my https://guix.gnu.org/[GuixSD] installation.
+Similar to my https://github.com/foo-dogsquared/nixos-config[NixOS configuration], it provides a quick way for me to install GuixSD very quickly with all of the settings intact (for 99% of the time) which is the advantages of using NixOS and GuixSD.
+
+
+
+
+== Project structure
+
+The current setup should have the following folder structure:
+
+[source, tree]
+----
+----
+
+* link:./config/[`./config/`] is the cluster-wide footnote:[When I say 'cluster-wide', I mean throughout all of my machines from a desktop (which I have only one) and laptops (which I have none).] ad-hoc configuration of the programs I often use.
+In this case, it will be my https://github.com/foo-dogsquared/dotfiles[dotfiles].
+
+* link:./hosts/[`./hosts/`] is the system configuration for each of my machines with each of their name listed as a directory.
+For more information, see the <<Hosts>> section.
+
+* link:./modules/[`./modules/`] is where particular modules (e.g., metapackages) are stored.
+They are primarily used by the `./manifests/` folder for user configuration.
+
+* link:./manifests/[`./manifests/`] contains https://guix.gnu.org/cookbook/en/html_node/Guix-Profiles-in-Practice.html[individual profiles] and https://guix.gnu.org/cookbook/en/html_node/Basic-setup-with-manifests.html[manifests] for user-level declarative configuration of their local system (e.g., Guix packages, third-party channels).
+
+
+
+
+== Hosts
+
+In link:./hosts/[`./hosts/`], it contains the configuration of each machine stored in their individual folder (with their name as the directory name).
+It is intended to be copied on the appropriate place (at `/etc/config.scm`) but you could choose to just configure it anywhere else.
+
+The configuration should strictly contain system-wide configuration and system-exclusive user configurations (e.g., guest users, helper accounts).
+User-specific configurations that can be found on other systems should go to the link:./manifests/[`./manifests/`] folder.
+
+For best practice, each host on `./hosts/$HOST` should follow the following folder structure:
+
+[source, tree]
+----
+./hosts/$HOST
+├── config/
+├── manifests/
+├── modules/
+├── packages/
+├── config.scm
+└── README.adoc
+----
+
+This folder structure is inspired from this very setup.
+The difference is it is solely for system-specific stuff: `config/` for system-specific ad-hoc configurations, `manifests/` for system-specific users configuration, etc.
+It should also have a `config.scm` file that contains the full system configuration similar to `/etc/config.scm` from your first installation (the guided graphical one, anyway).
+
+For accessibility and self-reminder, it is recommended to create a README file.
+It could be written in any format with any file extension.
+In my case, I have README written in https://asciidoctor.org/[Asciidoctor] with the `.adoc` file extension.
+
+
+
+
+== Want to learn about Guix?
+
+You might've heard about Guix (which is probably you're here).
+If you're curious, you can look through the following resources:
+
+* https://guix.gnu.org/manual/[The official manual] serves as a pretty good introduction to Guix (which it should be good).
+It contains a bunch of information from installation process to the conceptual overview to anything Guix-related.
+
+* https://guix.gnu.org/cookbook/[The Guix cookbook] is a great practical introduction on what to do next after the installation process.
+
+* The community behind Guix is pretty great and welcoming to newcomers.
+You can go to the IRC chat at `#guix` channel on irc.freenode.net to give them a visit.
+
+
+=== Why GuixSD?
+
+Guix has a lot of good stuff a power user may look for.
+Here are the following features I find very attractive:
+
+* Declarative configurations which enables easier reproducibility.
+The community behind Guix also happens to focus for https://reproducible-builds.org/[reproducible] and http://bootstrappable.org/[bootstrappable] builds which is interesting for me, at least.
+
+* Straightforward packaging process in case you didn't find the package you're looking for.
+This one is a must (in my opinion) if you want to make an independent Linux distro from scratch.
+You can either contribute to the https://guix.gnu.org/en/packages/[official package archive] or https://www.gnu.org/software/guix/manual/en/html_node/Channels.html[create one yourself].
+
+* Available options include rollback, letting you switch to previous configurations.
+This is useful for emergency situations where your current configuration doesn't work and rework your config.
+Theoretically, you would have a difficult time screwing your system up.
+footnote:[Practically, I don't know much but I imagine it would be "easy" especially for an idiot like me.
+We'll just have to see.]
+You could also go all the way back to your first installation provided you didn't garbage-collected your system yet.
+
+* It's a strictly https://www.gnu.org/distros/free-non-gnu-distros.html[free distro] with the ability to add your own proprietary stuff.
+As far as I know, there's no mechanism in Guix that prevents you from adding them.
+That alone makes it a true free distro for me: the freedom to add your own garbage. footnote:[;p]
+

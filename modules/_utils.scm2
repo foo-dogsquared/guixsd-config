@@ -1,0 +1,26 @@
+(define-module (modules _utils)
+  #:use-module (gnu packages)
+  #:use-module (ice-9 optargs))
+
+; TODO: Proper docstrings.
+(define*-public (create-pkg-interface #:key (base '()) (branches '()))
+     (lambda* (#:optional (enabled #f) #:key (allow '()))
+       (let ((packages '()))
+
+	 ; Creating the hash table from the subpackage branches.
+	 (define _branches (make-hash-table))
+	 (for-each (lambda (branch)
+		     (hashq-set! _branches (car branch) (cdr branch))) branches)
+
+	 ; Adding the base package if the module is enabled.
+	 (if enabled
+   	   (set! packages (append packages base)))
+
+	 ; Adding more packages for each allowed subpackages.
+   	 (for-each (lambda (option)
+   	             (let ((hash-value (hashq-ref _branches option)))
+   	               (if hash-value
+   	                 (set! packages (append packages hash-value))))) allow)
+   
+   	 ; Return the package list.
+   	 packages))))
