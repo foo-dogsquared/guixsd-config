@@ -1,17 +1,17 @@
-(use-modules 
-  (gnu packages)
-  (guix profiles)
-  ((modules desktop) #:prefix desktop:)
-  ((modules dev) #:prefix dev:)
-  ((modules editors) #:prefix editors:))
+(define-module (manifests base)
+  #:use-module (gnu packages)
+  #:use-module (guix profiles)
+  #:use-module ((modules desktop) #:prefix desktop:)
+  #:use-module ((modules dev) #:prefix dev:)
+  #:use-module ((modules editors) #:prefix editors:)
+  #:use-module ((modules shell) #:prefix shell:))
+  
 
 (specifications->manifest
   (append
     ; Desktop apps and whatnot.
     (desktop:pkgs-browsers
-      #:allow (list 'nyxt 'chromium))
-    (desktop:pkgs-cad
-      #:allow (list 'default 'kicad))
+      #:allow (list 'nyxt 'firefox))
     (desktop:pkgs-files)
     (desktop:pkgs-fonts)
     (desktop:pkgs-graphics
@@ -35,5 +35,8 @@
 
     ; Muh editors.
     (editors:pkgs-emacs)
-    (editors:pkgs-neovim)))
+    (editors:pkgs-neovim)
+
+    ; Muh terminal apps.
+    (shell:pkgs-base-shell)))
 

@@ -1,4 +1,5 @@
 = foo-dogsquared's GuixSD config
+:toc:
 
 This is my config on my https://guix.gnu.org/[GuixSD] installation.
 Similar to my https://github.com/foo-dogsquared/nixos-config[NixOS configuration], it provides a quick way for me to install GuixSD very quickly with all of the settings intact (for 99% of the time) which is the advantages of using NixOS and GuixSD.
@@ -12,6 +13,13 @@ The current setup should have the following folder structure:
 
 [source, tree]
 ----
+guixsd-config
+├── config/
+├── hosts/
+├── manifests/
+├── modules/
+├── packages/
+└── README.adoc
 ----
 
 * link:./config/[`./config/`] is the cluster-wide footnote:[When I say 'cluster-wide', I mean throughout all of my machines from a desktop (which I have only one) and laptops (which I have none).] ad-hoc configuration of the programs I often use.
@@ -44,13 +52,12 @@ For best practice, each host on `./hosts/$HOST` should follow the following fold
 ├── config/
 ├── manifests/
 ├── modules/
-├── packages/
 ├── config.scm
 └── README.adoc
 ----
 
 This folder structure is inspired from this very setup.
-The difference is it is solely for system-specific stuff: `config/` for system-specific ad-hoc configurations, `manifests/` for system-specific users configuration, etc.
+The difference is it is solely for system-specific stuff: `config/` for system-specific ad-hoc configurations, `manifests/` for system-specific users profiles, and so forth.
 It should also have a `config.scm` file that contains the full system configuration similar to `/etc/config.scm` from your first installation (the guided graphical one, anyway).
 
 For accessibility and self-reminder, it is recommended to create a README file.
@@ -60,27 +67,100 @@ In my case, I have README written in https://asciidoctor.org/[Asciidoctor] with 
 
 
 
-== Want to learn about Guix?
+== Modules
 
-You might've heard about Guix (which is probably you're here).
-If you're curious, you can look through the following resources:
-
-* https://guix.gnu.org/manual/[The official manual] serves as a pretty good introduction to Guix (which it should be good).
-It contains a bunch of information from installation process to the conceptual overview to anything Guix-related.
-
-* https://guix.gnu.org/cookbook/[The Guix cookbook] is a great practical introduction on what to do next after the installation process.
-
-* The community behind Guix is pretty great and welcoming to newcomers.
-You can go to the IRC chat at `#guix` channel on irc.freenode.net to give them a visit.
+link:./modules/[`./modules/`] contains the modules which are primarily metapackages (a package of a list of package) intended for easy toggling when configured with the https://guix.gnu.org/cookbook/en/html_node/Basic-setup-with-manifests.html[manifests].
 
 
-=== Why GuixSD?
+=== Workflow
+
+Since my modules setup is a bit customized for my needs, I'll try to explain it quickly.
+Here's the current project structure of the configuration (as of 2020-09-02):
+
+[source, tree]
+----
+guixsd-config/modules
+├── desktop.scm
+├── dev.scm
+├── editors.scm
+├── shell.scm
+└── _utils.scm
+----
+
+If you've already taken a peek on the main modules (e.g., `desktop.scm`, `dev.scm`), they are all defined with `create-pkg-interface` procedure.
+It is a procedure defined from `modules/_utils.scm`.
+
+.Example of using `create-pkg-interface` for creating a package module
+[source, guile]
+----
+; modules/games.scm
+(define-module (modules games)
+  #:use-modules (gnu packages)
+  #:use-modules ((modules _utils) #:prefix utils:
+                                  #:select (create-pkg-interface)))
+
+(create-pkg-interface
+  pkgs-games
+  '(
+     (default . ("0ad"
+                 "battle-for-wesnoth"
+                 "endless-sky"
+                 "openmw"
+                 "openrc"))
+     (proprietary . ("lutris"
+                     "playonlinux"
+                     "steam"))))
+----
+
+The above code listing will produce a exported procedure like the following:
+
+[source, guile]
+----
+(define*-public
+  (pkgs-games #:key (allow '()))
+  (
+    ; The unimportant implementation...
+    ; It will just create a list of names of the packages based from the allowlist of branches.
+  ))
+----
+
+Which on a manifest, you can use it like this:
+
+[source, guile]
+----
+; manifests/sample.scm
+(define-module (manifests sample)
+  #:use-modules (gnu packages)
+  #:use-modules (guix profiles)
+  #:use-modules ((modules games) #:prefix games:))
+
+(specifications->manifest
+  (append
+    ; Muh games.
+    (games:pkgs-games
+      #:allow (list 'default 'proprietary))
+
+    ; Your additional packages that are not added to the modules.
+    '("neovim"
+      "lf"
+      "minetest"
+    )))
+----
+
+
+
+
+== Why GuixSD?
 
 Guix has a lot of good stuff a power user may look for.
 Here are the following features I find very attractive:
 
 * Declarative configurations which enables easier reproducibility.
 The community behind Guix also happens to focus for https://reproducible-builds.org/[reproducible] and http://bootstrappable.org/[bootstrappable] builds which is interesting for me, at least.
+
+* Offers a transparent binary/source installation process.
+If a package is not available as a binary, it will just build the package for you instead.
+The best thing about it, it's optional with just a simple toggle option (`guix package -i $PACKAGE --fallback`).
 
 * Straightforward packaging process in case you didn't find the package you're looking for.
 This one is a must (in my opinion) if you want to make an independent Linux distro from scratch.
@@ -97,3 +177,48 @@ You could also go all the way back to your first installation provided you didn'
 As far as I know, there's no mechanism in Guix that prevents you from adding them.
 That alone makes it a true free distro for me: the freedom to add your own garbage. footnote:[;p]
 
+
+=== Want to learn about Guix?
+
+You might've heard about Guix (which is probably you're here).
+Here are the stuff I've look for resources:
+
+* https://guix.gnu.org/manual/[The official manual] serves as a pretty good introduction to Guix (which it should be good).
+It contains a bunch of information from installation process to the conceptual overview to anything Guix-related.
+
+* https://guix.gnu.org/cookbook/[The Guix cookbook] is a great practical introduction on what to do next after the installation process.
+
+* The community behind Guix is pretty great and welcoming to newcomers.
+You can go to the IRC chat at `#guix` channel on irc.freenode.net to give them a visit.
+
+* https://gitlab.com/pjotrp/guix-notes[Pjotr Prins' notes on GNU Guix] is a set of great document on the subject.
+It is pretty detailed so take as much as you want, revisit stuff, and glance at the possibilities of the distro.
+
+For other concepts such as channels, you can look at the official manual.
+Or just search through websites such as GitHub, GitLab, and the like.
+I found https://notabug.org/wigust/guix-wigust/[fairly active Guix channel] as a good example.
+
+About my experiences learning Guix, I cannot accurately say anything since it is pretty close to Nix.
+I would say since there's a lot of overlaps with Nix, it is almost seamless.
+
+I've encountered fewer problems compared to Nix and here's an exhaustive list of them:
+
+* Hardware compatibility is one of the major problems.
+I'm able to install GuixSD on bare metal without any scratches but for extra peripherals like WiFi adapters, it is not possible unless you've used a https://gitlab.com/nonguix/nonguix[non-free Guix channel that has it available].
+
+* Package count is far fewer compared to https://github.com/NixOS/nixpkgs[nixpkgs].
+It's no surprise since Guix is a younger project appeared a decade after Nix.
+Compared to other packaging process footnote:[My experience on packaging is very limited, I've only created a handful of packages for Arch Build System.], Guix offers a straightforward packaging process.
+
+* Only strictly free and open source stuff (FOSS) are applied.
+Again, not a surprise since it is a GNU project.
+Speaking of which, not all FOSS are there for various reasons (e.g., Firefox is not included since it contains copyrighted material).
+To get around it, you can create your channel composed of packages that will never get accepted upstream.
+footnote:[There's already one at https://gitlab.com/nonguix/nonguix if you want to get ahead.]
+
+* Learning https://www.gnu.org/software/guile/[GNU Guile] which is strictly not a requirement but it is a must if you want to go beyond configuring your system in a simple fashion.
+I would put this at the far end when put it in a tier list of problems.
+
+Compared to Nix, the community behind Guix has written great documentation with their https://guix.gnu.org/blog/[blog], https://guix.gnu.org/manual/en[manual], and the https://guix.gnu.org/cookbook/[cookbook].
+The graphical installation helps a ton with providing you to get familiar with GuixSD.
+Simple things like those do add up to the experience and I'm loving it.

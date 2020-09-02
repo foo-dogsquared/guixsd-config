@@ -4,23 +4,17 @@
   #:export (create-pkg-interface))
 
 (define-syntax-rule
-  (create-pkg-interface name branch-pairs)
+  (create-pkg-interface name branch-alist)
 
   "Creates a quick public interface of a toggle module.
-  It needs a name and a list of pairs with the identifier as the car and a list of Guix packages as the cdr.
-  Upon return, it will create a public procedure that accepts an allowlist of packages to be enabled."
+  It needs a name and an association list with the identifier as the key and a list of Guix packages as the value.
+  Upon return, it will create a public procedure that accepts an allowlist of branches with their associated list of packages to be added and returns the resulting package list."
 
   (define*-public (name #:key (allow (list 'default)))
     (let ((packages '()))
-
-      ; Create a hash table from the branch pairs.
-      (define _branches (make-hash-table))
-      (for-each (lambda (pair)
-                  (hashq-set! _branches (car pair) (cdr pair))) branch-pairs)
-
       ; Add the associated packages from the allowlisted subpackages.
       (for-each (lambda (option)
-                  (let ((hash-value (hashq-ref _branches option)))
+                  (let ((hash-value (assq-ref branch-alist option)))
                     (if hash-value
                         (set! packages (append packages hash-value))))) allow)
 
