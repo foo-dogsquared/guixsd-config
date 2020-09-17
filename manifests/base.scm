@@ -11,14 +11,14 @@
   (append
     ; Desktop apps and whatnot.
     (desktop:pkgs-browsers
-      #:allow (list 'nyxt 'firefox))
+      #:allow '(nyxt firefox))
     (desktop:pkgs-files)
     (desktop:pkgs-fonts)
     (desktop:pkgs-graphics
-      #:allow (list 'default 'raster 'vector '3d))
+      #:allow '(default raster vector 3d))
     (desktop:pkgs-multimedia)
     (desktop:pkgs-music
-      #:allow (list 'composition 'production))
+      #:allow '(composition production))
 
     ; Development such as such.
     (dev:pkgs-base-dev)
@@ -27,11 +27,12 @@
     (dev:pkgs-java)
     (dev:pkgs-javascript)
     (dev:pkgs-lisp
-      #:allow (list 'guile 'clojure 'racket))
+      #:allow '(guile clojure racket))
     (dev:pkgs-math)
+    (dev:pkgs-python)
     (dev:pkgs-rust)
     (dev:pkgs-technical-writing
-      #:allow (list 'default 'latex 'jupyter))
+      #:allow '(default latex jupyter))
 
     ; Muh editors.
     (editors:pkgs-emacs)

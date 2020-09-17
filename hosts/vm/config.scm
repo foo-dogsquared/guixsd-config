@@ -2,7 +2,7 @@
 ;; by the graphical installer.
 
 (use-modules (gnu))
-(use-service-modules desktop networking ssh xorg)
+(use-service-modules desktop networking ssh virtualization xorg)
 
 (operating-system
   (locale "en_PH.utf8")
@@ -31,7 +31,11 @@
             (service tor-service-type)
             (set-xorg-configuration
               (xorg-configuration
-                (keyboard-layout keyboard-layout))))
+                (keyboard-layout keyboard-layout)))
+	    (service qemu-binfmt-service-type
+	      (qemu-binfmt-configuration
+		(platforms (lookup-qemu-platforms "arm" "aarch64" "mips64el"))
+		(guix-support? #t))))
       %desktop-services))
   (bootloader
     (bootloader-configuration
